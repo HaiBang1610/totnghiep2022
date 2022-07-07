@@ -4,6 +4,9 @@ import { Link} from "react-router-dom";
 import moment from "moment-timezone";
 import DateTimePicker from 'react-datetime-picker'
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 export default class ManagementsList extends Component {
     constructor(props) {
       super(props);
@@ -25,11 +28,34 @@ export default class ManagementsList extends Component {
         currentIndex: -1,
         searchName: "",
         date:"",
-        price:""
+        price:"",
+        currentUser: false,
       };
     }
     componentDidMount() {
       this.retrieveManagements();
+      UserService.getUserBoard().then(
+        response => {
+          this.setState({
+            currentUser: true,
+          });
+          console.log(response.data)
+        },
+        error => {
+          this.setState({
+            content:
+              (error.response &&
+                error.response.data &&
+                error.response.data.message) ||
+              error.message ||
+              error.toString()
+          });
+  
+          if (error.response && error.response.status === 401) {
+            EventBus.dispatch("logout");
+          }
+        }
+      );
     }
     onChangeSearchName(e) {
       const searchName = e.target.value;
@@ -160,9 +186,11 @@ export default class ManagementsList extends Component {
       });
     }
     render() {
-      const { searchName, managements, currentManagement, currentIndex } = this.state;
+      const { searchName, managements, currentManagement, currentIndex, currentUser } = this.state;
       return (
-        <div className="list row">
+        <div>
+        {currentUser ?
+        (<div className="list row">
           {/*Search Bar---------------------------------------------------------------*/}
           <div className="col-md-8">
             <div className="input-group mb-3">
@@ -335,6 +363,7 @@ export default class ManagementsList extends Component {
               </div>
             )}
           </div>
+        </div>) : (<div>notfound...</div>)}
         </div>
       );
     }

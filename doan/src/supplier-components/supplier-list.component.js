@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import SupplierDataService from "../services/supplier.service";
 import { Link} from "react-router-dom";
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 
 export default class SuppliersList extends Component {
   constructor(props) {
@@ -17,10 +20,33 @@ export default class SuppliersList extends Component {
       currentSupplier: null,
       currentIndex: -1,
       searchName: "",
+      currentUser: false,
     };
   }
   componentDidMount() {
     this.retrieveSuppliers();
+    UserService.getUserBoard().then(
+      response => {
+        this.setState({
+          currentUser: true,
+        });
+        console.log(response.data)
+      },
+      error => {
+        this.setState({
+          content:
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString()
+        });
+
+        if (error.response && error.response.status === 401) {
+          EventBus.dispatch("logout");
+        }
+      }
+    );
   }
   onChangeSearchName(e) {
     const searchName = e.target.value;
@@ -76,9 +102,11 @@ export default class SuppliersList extends Component {
       });
   }
   render() {
-    const { searchName, suppliers, currentSupplier, currentIndex } = this.state;
+    const { searchName, suppliers, currentSupplier, currentIndex, currentUser } = this.state;
     return (
-      <div className="list row">
+      <div>
+      {currentUser ?
+      (<div className="list row">
         {/*Search Bar---------------------------------------------------------------*/}
         <div className="col-md-8">
           <div className="input-group mb-3">
@@ -179,6 +207,7 @@ export default class SuppliersList extends Component {
             </div>
           )}
         </div>
+      </div>) :(<div>notfound...</div>)}
       </div>
     );
   }

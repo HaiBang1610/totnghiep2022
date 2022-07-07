@@ -6,6 +6,9 @@ import SupplierDataService from "../services/supplier.service";
 import { Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -51,10 +54,33 @@ class AddProduct extends Component {
       category: "",
       submitted: false,
       name_message: "",
+      currentUser: false,
     };
   }
   componentDidMount() {
     this.retrieveSuppliers();
+    UserService.getUserBoard().then(
+      response => {
+        this.setState({
+          currentUser: true,
+        });
+        console.log(response.data)
+      },
+      error => {
+        this.setState({
+          content:
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString()
+        });
+
+        if (error.response && error.response.status === 401) {
+          EventBus.dispatch("logout");
+        }
+      }
+    );
   }
   retrieveSuppliers() {
     SupplierDataService.getAll()
@@ -183,7 +209,7 @@ class AddProduct extends Component {
     )
   }
   render() {
-    const{suppliers} =this.state;
+    const{suppliers, currentUser} =this.state;
     const initialValues = {
       name: this.state.name_checked,
       description: this.state.description,
@@ -193,7 +219,9 @@ class AddProduct extends Component {
       category: this.state.category,
     };
     return (
-        <div className="submit-form">
+      <div>
+        {currentUser ?
+        (<div className="submit-form">
           {this.state.submitted ? (
             <div>
               <h4>Thêm sản phẩm thành công!</h4>
@@ -382,6 +410,7 @@ class AddProduct extends Component {
               </Formik>
             </div>
           )}
+        </div>) : (<div>notfound...</div>)}
         </div>
       );
   

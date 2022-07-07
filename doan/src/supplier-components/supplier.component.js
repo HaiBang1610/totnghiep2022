@@ -3,6 +3,9 @@ import SupplierDataService from "../services/supplier.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -41,13 +44,36 @@ class Supplier extends Component {
           supplier_phone: "",
           supplier_address: "",
         },
-        message: ""
+        message: "",
+        currentUser: "",
       };
     }
     componentDidMount() {
       let { id } = this.props.params;
       //this.getProduct(this.props.match.params.id);
       this.getSupplier(id);
+      UserService.getUserBoard().then(
+        response => {
+          this.setState({
+            currentUser: true,
+          });
+          console.log(response.data)
+        },
+        error => {
+          this.setState({
+            content:
+              (error.response &&
+                error.response.data &&
+                error.response.data.message) ||
+              error.message ||
+              error.toString()
+          });
+  
+          if (error.response && error.response.status === 401) {
+            EventBus.dispatch("logout");
+          }
+        }
+      );
     }
     onChangeName(e) {
       const name = e.target.value;
@@ -135,7 +161,7 @@ class Supplier extends Component {
       )
     }
     render() {
-      const { currentSupplier } = this.state;
+      const { currentSupplier, currentUser } = this.state;
       const initialValues = {
         description: currentSupplier.supplier_description,
         address: currentSupplier.supplier_address,
@@ -143,6 +169,8 @@ class Supplier extends Component {
       };
       return (
         <div>
+        {currentUser ?
+        (<div>
           {currentSupplier.supplier_id ? (
             <div className="edit-form">
               <h4>Nhà cung cấp</h4>
@@ -279,6 +307,7 @@ class Supplier extends Component {
               <p>Nhà cung cấp này không tồn tại!</p>
             </div>
           )}
+        </div>) : (<div>notfound...</div>)}
         </div>
       );
     }

@@ -3,6 +3,8 @@ import React, { Component } from "react";
 import UserPacketDataService from "../services/userPacket.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -44,6 +46,7 @@ class UserUpdate extends Component {
                 active: false,
                 roleId: ""
             },
+            admin: false,
             message: "",
             active_message: "",
             role_message: "",
@@ -85,6 +88,27 @@ class UserUpdate extends Component {
     componentDidMount(){
         let {id} = this.props.params;
         this.getUser(id);
+        UserService.getAdminBoard().then(
+          response => {
+            this.setState({
+              admin: true,
+            });
+          },
+          error => {
+            this.setState({
+              content:
+                (error.response &&
+                  error.response.data &&
+                  error.response.data.message) ||
+                error.message ||
+                error.toString()
+            });
+    
+            if (error.response && error.response.status === 401) {
+              EventBus.dispatch("logout");
+            }
+          }
+        );
     }
     getUser(id) {
         UserPacketDataService.get(id)
@@ -171,12 +195,14 @@ class UserUpdate extends Component {
         )
       }
     render(){
-        const {currentUser} =this.state;
+        const {currentUser, admin} =this.state;
         const initialValues = {
             email: currentUser.email,
         };
         return(
-            <div className="edit-form">
+            <div>
+              {admin ?
+                (<div className="edit-form">
                 {currentUser.id 
                 ? (<div>
                     <h4>{currentUser.username}</h4>
@@ -335,7 +361,7 @@ class UserUpdate extends Component {
                       <p>Người dùng này không tồn tại!</p>
                     </div>
                     )
-                }
+                }</div>) : (<div>notfound...</div>)}
             </div>
         )
     }

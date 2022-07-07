@@ -4,6 +4,9 @@ import SupplierDataService from "../services/supplier.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -50,6 +53,7 @@ class Product extends Component {
         amount: "",
         price: "",
         category: "",
+        currentUser: false,
       },
       message: "",
       outstock_message: "",
@@ -60,6 +64,28 @@ class Product extends Component {
     //this.getProduct(this.props.match.params.id);
     this.getProduct(id);
     this.retrieveSuppliers();
+    UserService.getUserBoard().then(
+      response => {
+        this.setState({
+          currentUser: true,
+        });
+        console.log(response.data)
+      },
+      error => {
+        this.setState({
+          content:
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString()
+        });
+
+        if (error.response && error.response.status === 401) {
+          EventBus.dispatch("logout");
+        }
+      }
+    );
   }
   retrieveSuppliers() {
     SupplierDataService.getAll()
@@ -214,7 +240,7 @@ class Product extends Component {
     )
   }
   render() {
-    const { currentProduct, suppliers } = this.state;
+    const { currentProduct, suppliers, currentUser } = this.state;
     const initialValues = {
       //name: this.state.name_checked,
       description: currentProduct.description,
@@ -224,7 +250,9 @@ class Product extends Component {
       //category: this.state.category,
     };
     return (
-      <div className="edit-form">
+      <div>
+      {currentUser ?
+      (<div className="edit-form">
         {currentProduct.id ? (
           <div>
             <h4>Sản phẩm</h4>
@@ -424,6 +452,7 @@ class Product extends Component {
             <p>Sản phẩm này không tồn tại!</p>
           </div>
         )}
+      </div>) : (<div>notfound...</div>)}
       </div>
     );
   }

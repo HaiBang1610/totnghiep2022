@@ -17,7 +17,7 @@ export default class BoardAdmin extends Component {
     this.setActiveUser = this.setActiveUser.bind(this);
     this.searchName = this.searchName.bind(this);
     this.state = {
-      content: "",
+      admin: false,
       users: [],
       currentUser: null,
       currentIndex: -1,
@@ -30,7 +30,7 @@ export default class BoardAdmin extends Component {
     UserService.getAdminBoard().then(
       response => {
         this.setState({
-          content: response.data
+          admin: true,
         });
       },
       error => {
@@ -95,10 +95,11 @@ export default class BoardAdmin extends Component {
   }
 
   render() {
-    const { searchName, users, currentUser, currentIndex } = this.state;
+    const { admin, searchName, users, currentUser, currentIndex } = this.state;
     return (
-      <div className="list row">
-        {/*Search Bar---------------------------------------------------------------*/}
+      <div>
+        {admin ? 
+        (<div className="list row">
         <div className="col-md-8">
           <div className="input-group mb-3">
             <input
@@ -120,7 +121,6 @@ export default class BoardAdmin extends Component {
             </div>
           </div>
         </div>
-        {/*User List-----------------------------------------------------------------------*/}
         <div className="col-md-6">
           <h4>Danh sách người dùng {""}
           </h4>
@@ -152,7 +152,6 @@ export default class BoardAdmin extends Component {
               ))}
           </ul>         
         </div>
-        {/*user Detail--------------------------------------------------------------------*/}
         <div className="col-md-6">
           {currentUser ? (
             <div>
@@ -221,7 +220,7 @@ export default class BoardAdmin extends Component {
               <p>Vui lòng chọn một người dùng trong danh sách...</p>
             </div>
           )}
-        </div>
+        </div></div>) : (<div>Not found....</div>)}
       </div>
     );
   }

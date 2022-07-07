@@ -3,6 +3,8 @@ import React, { Component } from "react";
 import UserPacketDataService from "../services/userPacket.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -34,6 +36,7 @@ class UserPassUpdate extends Component {
             currentUser: {
                 id: null,
                 password: "",
+                admin: false,
             },
             password:"",
             pass_message: "",
@@ -48,6 +51,27 @@ class UserPassUpdate extends Component {
     componentDidMount(){
         let {id} = this.props.params;
         this.getUser(id);
+        UserService.getAdminBoard().then(
+            response => {
+              this.setState({
+                admin: true,
+              });
+            },
+            error => {
+              this.setState({
+                content:
+                  (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                  error.message ||
+                  error.toString()
+              });
+      
+              if (error.response && error.response.status === 401) {
+                EventBus.dispatch("logout");
+              }
+            }
+          );
     }
     getUser(id) {
         UserPacketDataService.get(id)
@@ -87,12 +111,14 @@ class UserPassUpdate extends Component {
         )
     }
     render(){
-        const {currentUser} =this.state;
+        const {currentUser, admin} =this.state;
         const initialValues = {
             password: this.state.password,
         };
         return(
-            <div className="edit-form">
+            <div>
+            {admin ?
+            (<div className="edit-form">
                 {currentUser.id 
                 ?   (
                     <div>
@@ -162,6 +188,7 @@ class UserPassUpdate extends Component {
                     </div>
                     )
                 }
+            </div>) : (<div>notfound...</div>)}
             </div>
         ) 
     }

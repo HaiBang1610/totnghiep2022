@@ -1,8 +1,10 @@
 import React, { Component } from "react";
 import SupplierDataService from "../services/supplier.service";
 import { Link} from "react-router-dom";
-
 import { useNavigate } from "react-router-dom";
+
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -41,7 +43,32 @@ class AddSupplier extends Component {
         address: "",
         submitted: false,
         name_message: "",
+        currentUser: false,
       };
+    }
+    componentDidMount() {
+      UserService.getUserBoard().then(
+        response => {
+          this.setState({
+            currentUser: true,
+          });
+          console.log(response.data)
+        },
+        error => {
+          this.setState({
+            content:
+              (error.response &&
+                error.response.data &&
+                error.response.data.message) ||
+              error.message ||
+              error.toString()
+          });
+  
+          if (error.response && error.response.status === 401) {
+            EventBus.dispatch("logout");
+          }
+        }
+      );
     }
     onChangeName(e) {
       this.setState({
@@ -127,6 +154,7 @@ class AddSupplier extends Component {
       )
     }
     render() {
+      const {currentUser} = this.state;
       const initialValues = {
         name: this.state.name_checked,
         description: this.state.description,
@@ -134,7 +162,9 @@ class AddSupplier extends Component {
         address: this.state.address,
       };
       return (
-          <div className="submit-form">
+        <div>
+          {currentUser ?
+          (<div className="submit-form">
             {this.state.submitted ? (
               <div>
                 <h4>Thông tin nhà cung cấp được thêm thành công!</h4>
@@ -264,7 +294,8 @@ class AddSupplier extends Component {
               </Formik>
               </div>
             )}
-          </div>
+          </div>) : (<div>notfound...</div>)}
+        </div>
         );
     
     }

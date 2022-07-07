@@ -5,6 +5,9 @@ import noImage from "../image/no_image.jpg"
 // eslint-disable-next-line no-unused-vars
 import { Modal } from "bootstrap";
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 
 export default class ProductsList extends Component {
   constructor(props) {
@@ -25,11 +28,34 @@ export default class ProductsList extends Component {
       currentIndex: -1,
       searchName: "",
       searchCategory: "",
+      currentUser: false,
       //searchOutstock:""
     };
   }
   componentDidMount() {
     this.retrieveProducts();
+    UserService.getUserBoard().then(
+      response => {
+        this.setState({
+          currentUser: true,
+        });
+        console.log(response.data)
+      },
+      error => {
+        this.setState({
+          content:
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString()
+        });
+
+        if (error.response && error.response.status === 401) {
+          EventBus.dispatch("logout");
+        }
+      }
+    );
   }
   onChangeSearchName(e) {
     const searchName = e.target.value;
@@ -121,9 +147,11 @@ export default class ProductsList extends Component {
       });
   }
   render() {
-    const { searchName, searchCategory, products, currentProduct, currentIndex } = this.state;
+    const { searchName, searchCategory, products, currentProduct, currentIndex, currentUser } = this.state;
     return (
-      <div className="list row">
+      <div>
+      {currentUser ?
+      (<div className="list row">
         {/*Search Bar---------------------------------------------------------------*/}
         <div className="col-md-8">
           <div className="input-group mb-3">
@@ -371,6 +399,7 @@ export default class ProductsList extends Component {
             </div>
           )}
         </div>
+      </div>) : (<div>notfound...</div>)}
       </div>
     );
   }

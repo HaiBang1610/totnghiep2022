@@ -25,7 +25,7 @@ class ManagementsListT extends Component {
                 <img src={managementList} alt="display" width="550" height="400" /><br/>
                 <p style={{fontWeight: 'bold'}}>
                     - Giao diện chính của trang 'Danh sách đơn hàng'.<br/>
-                    - Có thanh tìm kiếm theo tên sản phẩm, nút làm mới danh sách và nút lọc theo ngày bán.<br/>
+                    - Có thanh tìm kiếm theo tên sản phẩm, nút làm mới danh sách, nút lọc theo thời gian bán và nút tính tổng số tiền theo thời gian bán.<br/>
                     - Sử dụng nút 'Thêm đơn hàng' để chuyển sang trang thêm đơn hàng mới.<br/>
                 </p>
                 <button onClick={() => this.props.navigate(`/home`)} className="badge bg-dark mr-2">

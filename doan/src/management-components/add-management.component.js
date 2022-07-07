@@ -6,6 +6,9 @@ import DateTimePicker from 'react-datetime-picker'
 import moment from "moment-timezone";
 import { useNavigate } from "react-router-dom";
 
+import UserService from "../services/user.service";
+import EventBus from "../common/EventBus";
+
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -53,11 +56,34 @@ class AddManagement extends Component {
         sell_amount: "", 
         total_price: "",
         datetime: "",
-        submitted: false
+        submitted: false,
+        currentUser: false,
       };
     }
     componentDidMount() {
       this.retrieveStockProducts();
+      UserService.getUserBoard().then(
+        response => {
+          this.setState({
+            currentUser: true,
+          });
+          console.log(response.data)
+        },
+        error => {
+          this.setState({
+            content:
+              (error.response &&
+                error.response.data &&
+                error.response.data.message) ||
+              error.message ||
+              error.toString()
+          });
+  
+          if (error.response && error.response.status === 401) {
+            EventBus.dispatch("logout");
+          }
+        }
+      );
     }
     retrieveStockProducts() {
       ProductDataService.findAllStock()
@@ -166,7 +192,7 @@ class AddManagement extends Component {
       )
     }
     render() {
-      const{products} =this.state;
+      const{products, currentUser} =this.state;
       const initialValues = {
         product_name: this.state.product_name,
         datetime: this.state.datetime,
@@ -174,7 +200,9 @@ class AddManagement extends Component {
         total_price: this.state.total_price,
       };
       return (
-          <div className="submit-form">
+        <div>
+          {currentUser ?
+          (<div className="submit-form">
             {this.state.submitted ? (
               <div>
                 <h4>Thêm đơn hàng thành công!</h4>
@@ -313,7 +341,8 @@ class AddManagement extends Component {
               </Formik>
               </div>
             )}
-          </div>
+          </div>) :(<div>notfound...</div>)}
+        </div>
         );
     
     }

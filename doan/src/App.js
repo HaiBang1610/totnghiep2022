@@ -64,6 +64,7 @@ class App extends Component {
     const user = AuthService.getCurrentUser();
 
     if (user) {
+      console.log(user.roles)
       this.setState({
         currentUser: user,
         showModeratorBoard: user.roles.includes("ROLE_MODERATOR"),
