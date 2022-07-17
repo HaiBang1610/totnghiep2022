@@ -6,8 +6,10 @@ import SupplierDataService from "../services/supplier.service";
 import { Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+import Autocomplete from "@mui/material/Autocomplete/Autocomplete";
+import TextField from "@mui/material/TextField";
+
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -34,7 +36,7 @@ class AddProduct extends Component {
     this.onChangeName = this.onChangeName.bind(this);
     this.onChangeDescription = this.onChangeDescription.bind(this);
     this.onChangeImage=this.onChangeImage.bind(this);
-    this.onChangeSupplier_id=this.onChangeSupplier_id.bind(this);
+    this.onChangeSupplier_name=this.onChangeSupplier_name.bind(this);
     this.onChangeAmount=this.onChangeAmount.bind(this);
     this.onChangePrice=this.onChangePrice.bind(this);
     this.onChangeCategory=this.onChangeCategory.bind(this);
@@ -48,7 +50,8 @@ class AddProduct extends Component {
       description: "", 
       outstock: false,
       image: "",
-      supplier_id: "",
+      supplier_name: "",
+      supplier_id: null,
       amount: "",
       price: "",
       category: "",
@@ -66,20 +69,7 @@ class AddProduct extends Component {
         });
         console.log(response.data)
       },
-      error => {
-        this.setState({
-          content:
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString()
-        });
-
-        if (error.response && error.response.status === 401) {
-          EventBus.dispatch("logout");
-        }
-      }
+      error => {}
     );
   }
   retrieveSuppliers() {
@@ -94,6 +84,7 @@ class AddProduct extends Component {
         console.log(e);
       });
   }
+
   checkProductExisted() {
     var name = this.state.name_checked;
       ProductDataService.getName(name)
@@ -128,10 +119,20 @@ class AddProduct extends Component {
     });
     this.checkProductExisted()
   }
-  onChangeSupplier_id(e) {
+  onChangeSupplier_name(e, value) {
+    //console.log(value)
     this.setState({
-      supplier_id: e.target.value
+      supplier_name: value
     });
+    SupplierDataService.getName(value)
+    .then(response => {
+      this.setState({
+        supplier_id: response.data.supplier_id,
+      });
+    })
+    .catch(e => {
+      console.log(e);
+    })
     this.checkProductExisted()
   }
   onChangeAmount(e) {
@@ -201,7 +202,7 @@ class AddProduct extends Component {
       {
         name: Yup.string().required("Tên sản phẩm là bắt buộc"),
         description: Yup.string().required("Thông tin chi tiết là bắt buộc"),
-        supplier_id: Yup.string().required("Nhà cung cấp là bắt buộc"),
+        supplier_name: Yup.string().required("Nhà cung cấp là bắt buộc").nullable(true),
         amount: Yup.number().required("Số lượng là bắt buộc").positive("Số lượng sản phẩm ko thể nhỏ hơn 0 và mặc định là còn hàng.").integer("Số lượng sản phẩm không thể là số thập phân."),
         price: Yup.number().required("Giá sản phẩm là bắt buộc").positive("Giá sản phẩm ko thể là giá trị âm.").integer("Giá sản phẩm không thể là số thập phân.").min(1000,"Giá tối thiểu 1000 VND"),
         category: Yup.string().required("Loại sản phẩm là bắt buộc")
@@ -213,7 +214,7 @@ class AddProduct extends Component {
     const initialValues = {
       name: this.state.name_checked,
       description: this.state.description,
-      supplier_id: this.state.supplier_id,
+      supplier_name: this.state.supplier_name,
       amount: this.state.amount,
       price: this.state.price,
       category: this.state.category,
@@ -294,28 +295,29 @@ class AddProduct extends Component {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="supplier_id">Nhà cung cấp</label>
-                <Field as="select"
-                  className="form-control"
-                  id="supplier_id"
-                  
-                  value={this.state.supplier_id}
-                  onChange={this.onChangeSupplier_id}
-                  name="supplier_id"
-                >
-                
-                  {suppliers.map(({supplier_id,supplier_name}, index) =>
-                    {return <>
-                              <option value={supplier_id}>{supplier_name}</option>
-                            </>}
-                  )} 
-                  <option value="" disabled="true" hidden="true">Vui lòng chọn nhà cung cấp</option>          
-                </Field>
+                <label htmlFor="supplier_name"></label>
+                <Field
+                  //disablePortal
+                  component={Autocomplete}
+                  name="supplier_name"
+                  options={suppliers}
+                  getOptionLabel={(option) => option.supplier_name}
+                  //value={this.state.supplier_name}
+                  onInputChange={this.onChangeSupplier_name}
+                  sx={{ width: 500 }}
+                  renderInput={(params) => <TextField {...params} label="Nhà cung cấp" placeholder="Vui lòng điền tên nhà cung cấp" />}
+                />          
                 <ErrorMessage
-                  name="supplier_id"
+                  name="supplier_name"
                   component="div"
                   className="text-danger"
                 />
+                {/*<input
+                  type= "text"
+                  disabled= "true"
+                  value={this.state.supplier_id}
+                >
+                </input>*/}
               </div>
               <div className="form-group">
                 <label htmlFor="amount">Số lượng</label>
@@ -352,20 +354,15 @@ class AddProduct extends Component {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="Category">Loại sản phẩm</label>
-                <Field as="select"
+                <label htmlFor="Category">Loại sản phẩm (food, drink, ...)</label>
+                <Field 
+                  type="text"
                   className="form-control"
-                  id="category"
-                  
+                  id="category"                 
                   value={this.state.category}
                   onChange={this.onChangeCategory}
                   name="category"
                 >
-                  <option value="" disabled="true" hidden="true">Vui lòng chọn loại sản phẩm</option>
-                  <option value={'food'}>food</option>
-                  <option value={'drink'}>drink</option>
-                  <option value={'cigratte'}>cigratte</option>
-                  <option value={'other'}>other</option>
                 </Field>
                 <ErrorMessage
                   name="category"

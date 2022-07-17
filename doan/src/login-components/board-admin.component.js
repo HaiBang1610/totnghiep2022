@@ -5,6 +5,7 @@ import UserService from "../services/user.service";
 import EventBus from "../common/EventBus";
 
 import { Link } from "react-router-dom";
+import Scrollbars from "react-custom-scrollbars-2";
 
 import UserPacketDataService from "../services/userPacket.service";
 
@@ -123,12 +124,11 @@ export default class BoardAdmin extends Component {
         </div>
         <div className="col-md-6">
           <h4>Danh sách người dùng {""}
-          </h4>
-          <h4>
-            <button className="btn btn-secondary btn-sm" onClick={this.refreshList}>
+          <button className="btn btn-secondary btn-sm" onClick={this.refreshList}>
               <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <text>{" "}</text>
+          </h4>
+          <h4>
             <Link to="/register">
               <button className="btn btn-sm btn-primary">
                 <i class="bi bi-plus-circle text-light"></i>
@@ -136,6 +136,7 @@ export default class BoardAdmin extends Component {
               </button>
             </Link>
           </h4>
+          <Scrollbars autoHeightMax={450} autoHeight>
           <ul className="list-group">
             {users &&
               users.map((user, index) => (
@@ -147,14 +148,18 @@ export default class BoardAdmin extends Component {
                   onClick={() => this.setActiveUser(user, index)}
                   key={index}
                 >
-                  {user.username}
+                  {user.active =="1"
+                ? <div className="d-flex justify-content-between" >{user.username} <span className="badge bg-success "><i class="bi bi-check-lg"></i></span></div>
+                : <div className="d-flex justify-content-between" style={{color:"red"}}>{user.username} <span className="badge bg-danger "><i class="bi bi-lock-fill"></i></span></div>
+                }
                 </li>
               ))}
-          </ul>         
+          </ul>   
+          </Scrollbars>      
         </div>
         <div className="col-md-6">
           {currentUser ? (
-            <div>
+            <div class="card">
               <h4>{currentUser.username}</h4>
               {currentUser.roleId == "1"
               ? <></>
@@ -190,7 +195,7 @@ export default class BoardAdmin extends Component {
                     <strong>Tình trạng:</strong>
                     {" "}Hoạt động
                   </label>)
-                : (<label>
+                : (<label style={{color: "red"}}>
                     <strong>Tình trạng:</strong>
                     {" "}Bị khóa
                   </label>)
@@ -217,7 +222,7 @@ export default class BoardAdmin extends Component {
           ) : (
             <div>
               <br />
-              <p>Vui lòng chọn một người dùng trong danh sách...</p>
+              <p style={{fontWeight: 'bold'}}>Vui lòng chọn một người dùng trong danh sách...</p>
             </div>
           )}
         </div></div>) : (<div>Not found....</div>)}

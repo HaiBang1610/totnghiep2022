@@ -4,7 +4,6 @@ import UserPacketDataService from "../services/userPacket.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -94,20 +93,7 @@ class UserUpdate extends Component {
               admin: true,
             });
           },
-          error => {
-            this.setState({
-              content:
-                (error.response &&
-                  error.response.data &&
-                  error.response.data.message) ||
-                error.message ||
-                error.toString()
-            });
-    
-            if (error.response && error.response.status === 401) {
-              EventBus.dispatch("logout");
-            }
-          }
+          error => {}
         );
     }
     getUser(id) {
@@ -251,6 +237,7 @@ class UserUpdate extends Component {
                                 Hoạt động
                                 </button>
                             )}
+                            <text>{" "}</text>
                             <button
                             type="button"
                             className="badge bg-success"
@@ -289,10 +276,10 @@ class UserUpdate extends Component {
                                 onChange={this.onChangeRole}
                             >
                                 <option value={'1'}>Admin</option>
-                                <option value={'2'}>Moderator</option>
                                 <option value={'3'}>User</option>
                             </select>
                             </div>
+                            <div><label></label></div>
                             <button
                             type="button"
                             className="badge bg-success mr-2"
@@ -349,6 +336,7 @@ class UserUpdate extends Component {
                                 </div>
                             </div>
                             </div>
+                            <text>{" "}</text>
                             <button onClick={() => this.props.navigate(`/admin`)} className="badge bg-dark mr-2">
                                 Trở lại
                             </button>

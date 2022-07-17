@@ -29,8 +29,9 @@ Management.create(management, (err, data) => {
 exports.findAll = (req, res) => {
     const product_name = req.query.product_name;
     const datetime= req.query.datetime;
+    const category= req.query.category;
   
-    Management.getAll(product_name, datetime, (err, data) => {
+    Management.getAll(product_name, datetime, category, (err, data) => {
       if (err)
         res.status(500).send({
           message:

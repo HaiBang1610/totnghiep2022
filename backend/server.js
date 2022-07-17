@@ -19,6 +19,7 @@ require("./app/routes/product.routes.js")(app);
 require("./app/routes/supplier.routes.js")(app);
 require("./app/routes/management.routes.js")(app);
 require("./app/routes/userPacket.routes.js")(app);
+require("./app/routes/receipt.routes.js")(app);
 require('./app/routes/auth.routes')(app);
 require('./app/routes/user.routes')(app);
 

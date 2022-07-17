@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import SupplierDataService from "../services/supplier.service";
+import ProductDataService from "../services/product.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -34,6 +34,7 @@ class Supplier extends Component {
       this.onChangePhone = this.onChangePhone.bind(this);
       this.onChangeAddress = this.onChangeAddress.bind(this);
       this.getSupplier = this.getSupplier.bind(this);
+      this.getProduct = this.getProduct.bind(this);
       this.updateSupplier = this.updateSupplier.bind(this);
       this.deleteSupplier = this.deleteSupplier.bind(this);
       this.state = {
@@ -44,6 +45,9 @@ class Supplier extends Component {
           supplier_phone: "",
           supplier_address: "",
         },
+        disabledUpdate: null,
+        messageProductLink: "",
+        messageProductNotLink: "",
         message: "",
         currentUser: "",
       };
@@ -52,6 +56,7 @@ class Supplier extends Component {
       let { id } = this.props.params;
       //this.getProduct(this.props.match.params.id);
       this.getSupplier(id);
+      this.getProduct(id);
       UserService.getUserBoard().then(
         response => {
           this.setState({
@@ -59,20 +64,7 @@ class Supplier extends Component {
           });
           console.log(response.data)
         },
-        error => {
-          this.setState({
-            content:
-              (error.response &&
-                error.response.data &&
-                error.response.data.message) ||
-              error.message ||
-              error.toString()
-          });
-  
-          if (error.response && error.response.status === 401) {
-            EventBus.dispatch("logout");
-          }
-        }
+        error => {}
       );
     }
     onChangeName(e) {
@@ -124,6 +116,25 @@ class Supplier extends Component {
         .catch(e => {
           console.log(e);
         });
+    }
+    getProduct(supplier_id) {
+      ProductDataService.findBySupplier(supplier_id)
+      .then(response =>{
+        console.log(response.data);
+        if(response.data.length > 0)
+        this.setState({
+          disabledUpdate: true,
+          messageProductLink: "Nhà cung cấp này đã được liên kết với sản phẩm! Không thể xóa!",
+        });
+        else {
+          this.setState({
+            disabledUpdate: false,
+            messageProductNotLink: "Nhà cung cấp này chưa được liên kết với sản phẩm",
+          });
+        }
+      })
+      .catch(e => {
+      })
     }
     updateSupplier() {
         SupplierDataService.update(
@@ -236,11 +247,13 @@ class Supplier extends Component {
                   className="text-danger"
                   />
                 </div>
+                <div><label></label></div>
               <button
                 type="button"
                 className="badge bg-danger mr-2"
                 //onClick={this.deleteSupplier}
                 data-bs-toggle="modal" data-bs-target="#remove"
+                disabled={this.state.disabledUpdate}
               >
                 Xóa
               </button>
@@ -257,7 +270,7 @@ class Supplier extends Component {
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="m-3 btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button className="m-3 btn btn-sm btn-danger" onClick={this.deleteSupplier} data-bs-dismiss="modal">
+                  <button type="button" className="m-3 btn btn-sm btn-danger" onClick={this.deleteSupplier} data-bs-dismiss="modal">
                     <i class="bi bi-trash text-light"></i>
                     Tiếp tục
                   </button>
@@ -265,6 +278,7 @@ class Supplier extends Component {
               </div>
             </div>
             </div>
+            <text>{" "}</text>
               <button
                 type="button"
                 className="badge bg-success"
@@ -294,10 +308,13 @@ class Supplier extends Component {
               </div>
             </div>
             </div>
+            <text>{" "}</text>
               <button type= "button" onClick={() => this.props.navigate(`/suppliers`)} className="badge bg-dark mr-2">
                 Trở lại
               </button>
               <p style={{color:"red"}}>{this.state.message}</p>
+              <p style={{color:"red"}}>{this.state.messageProductLink}</p>
+              <p style={{color:"green"}}>{this.state.messageProductNotLink}</p>
               </Form>
               </Formik>
             </div>

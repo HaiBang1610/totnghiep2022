@@ -133,7 +133,8 @@ const withRouter = WrappedComponent => props => {
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group text-center">
+              <div><label></label></div>
               <button
                 className="btn btn-primary btn-block"
                 disabled={this.state.loading}

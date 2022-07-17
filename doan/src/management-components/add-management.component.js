@@ -6,8 +6,10 @@ import DateTimePicker from 'react-datetime-picker'
 import moment from "moment-timezone";
 import { useNavigate } from "react-router-dom";
 
+import Autocomplete from "@mui/material/Autocomplete/Autocomplete";
+import TextField from "@mui/material/TextField";
+
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -58,6 +60,7 @@ class AddManagement extends Component {
         datetime: "",
         submitted: false,
         currentUser: false,
+        amount_message: ""
       };
     }
     componentDidMount() {
@@ -69,20 +72,7 @@ class AddManagement extends Component {
           });
           console.log(response.data)
         },
-        error => {
-          this.setState({
-            content:
-              (error.response &&
-                error.response.data &&
-                error.response.data.message) ||
-              error.message ||
-              error.toString()
-          });
-  
-          if (error.response && error.response.status === 401) {
-            EventBus.dispatch("logout");
-          }
-        }
+        error => {}
       );
     }
     retrieveStockProducts() {
@@ -97,14 +87,15 @@ class AddManagement extends Component {
           console.log(e);
         });
     }
-    onChangeName(e) {
+    onChangeName(e, value) {
       this.setState({
-        product_name: e.target.value
+        product_name: value
       });
     }
     onChangeAmount(e) {
       this.setState({
-        sell_amount: e.target.value
+        sell_amount: e.target.value,
+        total_price: ""
       });
       this.retrieveOneProducts();
     }
@@ -123,10 +114,26 @@ class AddManagement extends Component {
           });
     }
     onChangePrice(e) {
-      this.setState(prevState =>({
+      var math = this.state.product.amount - this.state.sell_amount
+      if(math > 0)
+      {this.setState(prevState =>({
         total_price: this.state.product.price*this.state.sell_amount,
-        product: {...prevState.product, amount: this.state.product.amount-this.state.sell_amount}
-      }));
+        product: {...prevState.product, amount: this.state.product.amount-this.state.sell_amount},
+        amount_message: ""
+      }));}
+      else if(math === 0) 
+        {this.setState(prevState =>({
+          total_price: this.state.product.price*this.state.sell_amount,
+          product: {...prevState.product, amount: this.state.product.amount-this.state.sell_amount, outstock: true},
+          amount_message: ""
+        }));
+      }
+      else {
+        this.setState({
+          total_price: "",
+          amount_message: "Số lượng bán ra vượt quá số lượng hiện tại."
+        });
+      }
       
     }
     onChangeDatetime(e) {
@@ -184,7 +191,7 @@ class AddManagement extends Component {
     validationSchema(){
       return Yup.object().shape(
         {
-          product_name: Yup.string().required("Vui lòng chọn 1 sản phẩm"),
+          product_name: Yup.string().required("Tên sản phẩm là bắt buộc.").nullable(true),
           datetime: Yup.string().required("Vui lòng chọn thời gian sản phẩm được bán"),
           sell_amount: Yup.number().required("Số lượng là bắt buộc").positive("Số lượng sản phẩm ko thể nhỏ hơn 0").integer("Số lượng sản phẩm không thể là số thập phân."),
           total_price: Yup.number().required("Vui lòng tính tổng giá bằng cách nhấn vào nút bên cạnh tiêu đề."),
@@ -228,25 +235,32 @@ class AddManagement extends Component {
                 <Form>
                 <div className="form-group">
                 <label htmlFor="product_name">Tên sản phẩm</label>
-                <Field as="select"
-                  className="form-control"
-                  id="product_name"
-                  //required
-                  value={this.state.product_name}
-                  onChange={this.onChangeName}
+                <Field
+                  //disablePortal
+                  component={Autocomplete}
                   name="product_name"
-                >
-                  {products.map(({name}, index) =>
-                    {return <><option value={name}>{name}</option></>}
-                  )}           
-                  <option value="" disabled="true" hidden="true">Vui lòng chọn sản phẩm</option>
-                </Field>
+                  options={products}
+                  getOptionLabel={(option) => option.name}
+                  //value={this.state.supplier_name}
+                  onInputChange={this.onChangeName}
+                  sx={{ width: 500 }}
+                  renderInput={(params) => <TextField {...params} placeholder="Vui lòng điền tên sản phẩm" />}
+                /> 
                 <ErrorMessage
                   name="product_name"
                   component="div"
                   className="text-danger"
                 />
-              </div>
+                </div>
+                {/*<div className="form-group">
+                  <label>Số lượng sản phẩm hiện tại</label>
+                  <input
+                    type="text"
+                    disabled="true"
+                    value={this.state.product.amount}
+                  >
+                  </input>
+                </div>*/}
                 <div className="form-group">
                   <label htmlFor="sell_amount">Số lượng bán ra</label>
                   <Field
@@ -287,6 +301,7 @@ class AddManagement extends Component {
                   className="text-danger"
                 />
                 </div>
+                <p style={{color:"red"}}>{this.state.amount_message}</p>
                 <div className="form-group">
                   <label htmlFor="datetime">Thời gian bán</label>
                   <DateTimePicker
@@ -305,13 +320,14 @@ class AddManagement extends Component {
                   className="text-danger"
                 />
                 </div>
+                <div><label></label></div>
                 <button 
                   type="button" 
                   //onClick={this.saveManagement} 
                   className="badge bg-success"
                   data-bs-toggle="modal" data-bs-target="#add"
                   >
-                  Submit
+                  Thêm
                 </button>
                  {/*Modal*/}
                  <div class="modal fade" id="add" tabindex="-1" aria-labelledby="addLabel" aria-hidden="true">
@@ -334,7 +350,8 @@ class AddManagement extends Component {
                   </div>
                 </div>
               </div>
-                <button onClick={() => this.props.navigate(`/suppliers`)} className="badge bg-danger mr-2">
+              <text>{" "}</text>
+                <button onClick={() => this.props.navigate(`/managements`)} className="badge bg-danger mr-2">
                 Trở lại
               </button>
               </Form>

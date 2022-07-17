@@ -18,6 +18,9 @@ class ManagementDataService {
   findByDate(date) {
     return http.get(`/managements?datetime=${date}`);
   }
+  findByCate(category) {
+    return http.get(`/managements?category=${category}`);
+  }
   getTotalPrice(date){
     return http.get(`/managements/datetime/${date}`);
   }

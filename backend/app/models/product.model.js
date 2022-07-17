@@ -26,7 +26,7 @@ Product.create = (newProduct, result) => {
 };
 
 Product.findById = (id, result) => {
-  sql.query(`SELECT * FROM products WHERE id = ${id}`, (err, res) => {
+  sql.query(`SELECT * FROM products inner join supplier on products.supplier_id = supplier.supplier_id WHERE id = ${id}`, (err, res) => {
     if (err) {
       console.log("error: ", err);
       result(err, null);
@@ -64,7 +64,27 @@ Product.findByName = (name, result) => {
   });
 };
 
-Product.getAll = (name, category, result) => {
+Product.findCategory = (result) => {
+  sql.query(`SELECT category FROM products group by category`, (err, res) => {
+    if (err) {
+      console.log("error: ", err);
+      result(err, null);
+      return;
+    }
+
+    if (res.length) {
+      console.log("found categories: ", res);
+      //console.log(name)
+      result(null, res);
+      return;
+    }
+
+    // not found category
+    result({ kind: "not_found" }, null);
+  });
+};
+
+Product.getAll = (name, category, supplier_id, result) => {
   let query = "SELECT * FROM products inner join supplier on products.supplier_id = supplier.supplier_id";
 
   if (name) {
@@ -72,6 +92,9 @@ Product.getAll = (name, category, result) => {
   }
   if (category) {
     query += ` WHERE category LIKE '%${category}%'`;
+  }
+  if (supplier_id) {
+    query += ` WHERE products.supplier_id LIKE '%${supplier_id}%'`;
   }
 
   sql.query(query, (err, res) => {

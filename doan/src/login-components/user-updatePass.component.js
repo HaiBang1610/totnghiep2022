@@ -4,7 +4,6 @@ import UserPacketDataService from "../services/userPacket.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -57,20 +56,7 @@ class UserPassUpdate extends Component {
                 admin: true,
               });
             },
-            error => {
-              this.setState({
-                content:
-                  (error.response &&
-                    error.response.data &&
-                    error.response.data.message) ||
-                  error.message ||
-                  error.toString()
-              });
-      
-              if (error.response && error.response.status === 401) {
-                EventBus.dispatch("logout");
-              }
-            }
+            error => {}
           );
     }
     getUser(id) {

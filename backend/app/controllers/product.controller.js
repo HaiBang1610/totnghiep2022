@@ -33,8 +33,9 @@ Product.create(product, (err, data) => {
 exports.findAll = (req, res) => {
   const name = req.query.name;
   const category = req.query.category;
+  const supplier_id = req.query.supplier_id;
 
-  Product.getAll(name, category, (err, data) => {
+  Product.getAll(name, category, supplier_id, (err, data) => {
     if (err)
       res.status(500).send({
         message:
@@ -73,6 +74,23 @@ exports.findName = (req, res) => {
       } else {
         res.status(500).send({
           message: "Error retrieving Product with name " + req.params.name
+        });
+      }
+    } else res.send(data);
+  });
+};
+
+// Find all categories
+exports.findCategory = (req, res) => {
+  Product.findCategory((err, data) => {
+    if (err) {
+      if (err.kind === "not_found") {
+        res.status(404).send({
+          message: `Not found any categories`
+        });
+      } else {
+        res.status(500).send({
+          message: "Error retrieving categories"
         });
       }
     } else res.send(data);

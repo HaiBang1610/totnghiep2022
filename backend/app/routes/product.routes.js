@@ -9,6 +9,9 @@ module.exports = app => {
   // Retrieve all products
   router.get("/", products.findAll);
 
+  // Retrieve all categories
+  router.get("/category", products.findCategory);
+
   // Retrieve all outstock products
   router.get("/outstock", products.findAllOutStock);
 

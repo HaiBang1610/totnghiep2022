@@ -60,14 +60,17 @@ Management.getTotalPrice = (datetime, result) => {
   });
 };
 
-Management.getAll = (product_name, datetime, result) => {
-    let query = "SELECT * FROM sell_management";
+Management.getAll = (product_name, datetime, category, result) => {
+    let query = "SELECT * from sell_management inner join products on sell_management.product_name = products.name";
   
     if (product_name) {
       query += ` WHERE product_name LIKE '%${product_name}%'`;
     }
     if (datetime) {
       query += ` WHERE datetime LIKE '%${datetime}%'`;
+    }
+    if (category) {
+      query += ` WHERE category LIKE '%${category}%'`;
     }
   
     sql.query(query, (err, res) => {

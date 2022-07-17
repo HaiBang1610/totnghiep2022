@@ -2,11 +2,12 @@ import React, { Component } from "react";
 import ProductDataService from "../services/product.service";
 import { Link} from "react-router-dom";
 import noImage from "../image/no_image.jpg"
+import Scrollbars from "react-custom-scrollbars-2";
+import LinesEllipsis from 'react-lines-ellipsis'
 // eslint-disable-next-line no-unused-vars
 import { Modal } from "bootstrap";
 
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 
 export default class ProductsList extends Component {
@@ -16,6 +17,7 @@ export default class ProductsList extends Component {
     this.onChangeSearchCategory = this.onChangeSearchCategory.bind(this);
     //this.onChangeSearchOutstock = this.onChangeSearchOutstock.bind(this);
     this.retrieveProducts = this.retrieveProducts.bind(this);
+    this.retrieveCategories = this.retrieveCategories.bind(this);
     this.refreshList = this.refreshList.bind(this);
     this.setActiveProduct = this.setActiveProduct.bind(this);
     this.removeAllProducts = this.removeAllProducts.bind(this);
@@ -29,11 +31,14 @@ export default class ProductsList extends Component {
       searchName: "",
       searchCategory: "",
       currentUser: false,
+      categories: [],
       //searchOutstock:""
     };
+    this.ref = React.createRef()
   }
   componentDidMount() {
     this.retrieveProducts();
+    this.retrieveCategories();
     UserService.getUserBoard().then(
       response => {
         this.setState({
@@ -41,20 +46,7 @@ export default class ProductsList extends Component {
         });
         console.log(response.data)
       },
-      error => {
-        this.setState({
-          content:
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString()
-        });
-
-        if (error.response && error.response.status === 401) {
-          EventBus.dispatch("logout");
-        }
-      }
+      error => {}
     );
   }
   onChangeSearchName(e) {
@@ -80,6 +72,18 @@ export default class ProductsList extends Component {
       .then(response => {
         this.setState({
           products: response.data
+        });
+        console.log(response.data);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
+  retrieveCategories() {
+    ProductDataService.findAllCategories()
+      .then(response => {
+        this.setState({
+          categories: response.data
         });
         console.log(response.data);
       })
@@ -147,7 +151,7 @@ export default class ProductsList extends Component {
       });
   }
   render() {
-    const { searchName, searchCategory, products, currentProduct, currentIndex, currentUser } = this.state;
+    const { categories, searchName, searchCategory, products, currentProduct, currentIndex, currentUser } = this.state;
     return (
       <div>
       {currentUser ?
@@ -175,46 +179,15 @@ export default class ProductsList extends Component {
           </div>
         </div>
         <div className="col-md-8">
-          <div className="radio">
-            <label>
-            <input
-              type="radio"
-              value="food"
-              checked={searchCategory === "food"}
-              onChange={this.onChangeSearchCategory}
-            /> Food
-            </label>
-          </div>
-          <div className="radio">
-            <label>
-            <input
-              type="radio"
-              value="drink"
-              checked={searchCategory === "drink"}
-              onChange={this.onChangeSearchCategory}
-            /> Drink
-            </label>
-          </div>
-          <div className="radio">
-            <label>
-            <input
-              type="radio"
-              value="cigratte"
-              checked={searchCategory === "cigratte"}
-              onChange={this.onChangeSearchCategory}
-            /> Cigratte
-            </label>
-          </div>
-          <div className="radio">
-            <label>
-            <input
-              type="radio"
-              value="other"
-              checked={searchCategory === "other"}
-              onChange={this.onChangeSearchCategory}
-            /> Other
-            </label>
-          </div>
+          <h6>Loại sản phẩm{" "}
+          <select
+            value= {searchCategory}
+            onChange ={this.onChangeSearchCategory}
+          >
+            {categories.map((item, index) => {return<><option value={item.category}>{item.category}</option></>})}
+            <option value="" disabled="true" hidden="true">Chọn</option>
+          </select>
+          <text>{" "}</text>
               <button
                 className="btn btn-secondary btn-sm"
                 type="button"
@@ -223,13 +196,12 @@ export default class ProductsList extends Component {
                 <i class="bi bi-filter"></i>
                 Lọc
               </button>
+          </h6>
         </div>
         {/*Product List-----------------------------------------------------------------------*/}
         <div className="col-md-6">
           <h4>Danh sách sản phẩm {""}
-          </h4>
-          <h4>
-            <button className="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#detail">
+          <button className="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#detail">
               <i class="bi bi-question-lg"></i>
             </button>
             {/*Modal detail */}
@@ -260,7 +232,8 @@ export default class ProductsList extends Component {
               >
                 Hết hàng
             </button>
-            <text>{" "}</text><br/>
+          </h4>
+          <h4>
             <Link to="/add">
               <button className="btn btn-sm btn-primary">
                 <i class="bi bi-plus-circle text-light"></i>
@@ -294,6 +267,7 @@ export default class ProductsList extends Component {
               </div>
             </div>
           </h4>
+          <Scrollbars autoHeightMax={450} autoHeight>
           <ul className="list-group">
             {products &&
               products.map((product, index) => (
@@ -306,18 +280,23 @@ export default class ProductsList extends Component {
                   key={index}
                 >
                   {product.amount === "0" 
-                    ? product.outstock ? <div style={{color:"red"}}> {product.name} - Hết hàng</div> : <div style={{color:"blue"}}> {product.name}</div>
-                    : product.outstock ? <div style={{color:"blue"}}> {product.name}</div> : product.name
+                    ? product.outstock 
+                          ? <div className="d-flex justify-content-between" style={{color:"red"}}>{product.name} <span className="badge bg-danger rounded-pill">{product.amount}</span></div> 
+                          : <div className="d-flex justify-content-between" style={{color:"blue"}}>{product.name} <span className="badge bg-primary rounded-pill">Cần cập nhật</span></div>
+                    : product.outstock 
+                          ? <div className="d-flex justify-content-between" style={{color:"blue"}}>{product.name} <span className="badge bg-primary rounded-pill">Cần cập nhật</span></div> 
+                          : <div className="d-flex justify-content-between">{product.name} <span className="badge bg-success rounded-pill">{product.amount}</span></div>
                   }
                 </li>
               ))}
-          </ul>         
+          </ul>
+          </Scrollbars>         
         </div>
         {/*Product Detail--------------------------------------------------------------------*/}
         <div className="col-md-6">
           {currentProduct ? (
-            <div>
-              <h4>Sản phẩm</h4>
+            <div class="card">
+              <h4>{currentProduct.name}</h4>
               <div>
                 {currentProduct.image ? (
                 <img src={currentProduct.image} alt="display" width="200" height="200" />
@@ -333,12 +312,6 @@ export default class ProductsList extends Component {
               </Link>
               <div>
                 <label>
-                  <strong>Tên sản phẩm:</strong>
-                  {" "}{currentProduct.name}
-                </label>
-              </div>
-              <div>
-                <label>
                   <strong>Nhà cung cấp:</strong>
                   {" "}{currentProduct.supplier_name}
                 </label>
@@ -346,7 +319,8 @@ export default class ProductsList extends Component {
               <div>
                 <label>
                   <strong>Thông tin chi tiết:</strong>
-                  {" "}{currentProduct.description}
+                  <LinesEllipsis text={currentProduct.description} maxLine='2' ellipsis='...' trimRight basedOn='letters'>
+                  </LinesEllipsis>
                 </label>
               </div>
               <div>
@@ -387,15 +361,15 @@ export default class ProductsList extends Component {
               </div>
               <div>
                   {currentProduct.amount === "0" 
-                    ? currentProduct.outstock ? <></> : <label style={{color:"red"}}><strong>Chú thích:</strong>{" "}Sản phẩm cần được cập nhật lại tình trạng hoặc số lượng!</label>
-                    : currentProduct.outstock ? <label style={{color:"red"}}><strong>Chú thích:</strong>{" "}Sản phẩm cần được cập nhật lại tình trạng hoặc số lượng!</label> : <></>
+                    ? currentProduct.outstock ? <></> : <label style={{color:"red"}}>{" "}Cần được cập nhật lại tình trạng hoặc số lượng!</label>
+                    : currentProduct.outstock ? <label style={{color:"red"}}>{" "}Cần được cập nhật lại tình trạng hoặc số lượng!</label> : <></>
                   }
               </div>
             </div>
           ) : (
             <div>
               <br />
-              <p>Vui lòng chọn một sản phẩm trong danh sách...</p>
+              <p style={{fontWeight: 'bold'}}>Vui lòng chọn một sản phẩm trong danh sách...</p>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 .list {
   text-align: left;
-  max-width: 750px;
+  max-width: 900px;
   margin: auto;
 }
 .submit-form {
@@ -28,9 +28,10 @@ label {
 
 .card {
   background-color: #f7f7f7;
+  max-width: 500px;
   padding: 20px 25px 30px;
   margin: 0 auto 25px;
-  margin-top: 50px;
+  margin-top: 0px;
   -moz-border-radius: 2px;
   -webkit-border-radius: 2px;
   border-radius: 2px;

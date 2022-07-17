@@ -4,8 +4,10 @@ import SupplierDataService from "../services/supplier.service";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
+import Autocomplete from "@mui/material/Autocomplete/Autocomplete";
+import TextField from "@mui/material/TextField";
+
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -33,7 +35,7 @@ class Product extends Component {
     this.onChangeName = this.onChangeName.bind(this);
     this.onChangeDescription = this.onChangeDescription.bind(this);
     this.onChangeImage=this.onChangeImage.bind(this);
-    this.onChangeSupplier_id=this.onChangeSupplier_id.bind(this);
+    this.onChangeSupplier_name=this.onChangeSupplier_name.bind(this);
     this.onChangeAmount=this.onChangeAmount.bind(this);
     this.onChangePrice=this.onChangePrice.bind(this);
     this.onChangeCategory=this.onChangeCategory.bind(this);
@@ -50,6 +52,7 @@ class Product extends Component {
         outstock: false,
         image: "",
         supplier_id: "",
+        supplier_name:"",
         amount: "",
         price: "",
         category: "",
@@ -71,20 +74,7 @@ class Product extends Component {
         });
         console.log(response.data)
       },
-      error => {
-        this.setState({
-          content:
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString()
-        });
-
-        if (error.response && error.response.status === 401) {
-          EventBus.dispatch("logout");
-        }
-      }
+      error => {}
     );
   }
   retrieveSuppliers() {
@@ -119,14 +109,19 @@ class Product extends Component {
       }
     }));
   }
-  onChangeSupplier_id(e) {
-    const supplier_id = e.target.value;   
+  onChangeSupplier_name(e, value) {   
+    SupplierDataService.getName(value)
+    .then(response => {
     this.setState(prevState => ({
       currentProduct: {
         ...prevState.currentProduct,
-        supplier_id: supplier_id
+        supplier_id: response.data.supplier_id
       }
     }));
+  })
+  .catch(e => {
+    console.log(e);
+  })
   }
   onChangeAmount(e) {
     const amount = e.target.value;   
@@ -232,10 +227,10 @@ class Product extends Component {
       {
         //name: Yup.string().required("Tên sản phẩm là bắt buộc"),
         description: Yup.string().required("Thông tin chi tiết là bắt buộc"),
-        //supplier_id: Yup.string().required("Nhà cung cấp là bắt buộc"),
+        supplier_name: Yup.string().required("Nhà cung cấp là bắt buộc").nullable(true),
         amount: Yup.number().required("Số lượng là bắt buộc").moreThan(-1,"Số lượng sản phẩm ko thể là giá trị âm.").integer("Số lượng sản phẩm không thể là số thập phân."),
         price: Yup.number().required("Giá sản phẩm là bắt buộc").positive("Giá sản phẩm ko thể là giá trị âm.").integer("Giá sản phẩm không thể là số thập phân.").min(1000,"Giá tối thiểu 1000 VND"),
-        //category: Yup.string().required("Loại sản phẩm là bắt buộc")
+        category: Yup.string().required("Loại sản phẩm là bắt buộc")
       }
     )
   }
@@ -244,10 +239,10 @@ class Product extends Component {
     const initialValues = {
       //name: this.state.name_checked,
       description: currentProduct.description,
-      //supplier_id: this.state.supplier_id,
+      supplier_name: currentProduct.supplier_name,
       amount: currentProduct.amount,
       price: currentProduct.price,
-      //category: this.state.category,
+      category: currentProduct.category,
     };
     return (
       <div>
@@ -298,17 +293,18 @@ class Product extends Component {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="supplier_id">Nhà cung cấp</label>
-                <select
-                  className="form-control"
-                  id="supplier_id"
-                  value={currentProduct.supplier_id}
-                  onChange={this.onChangeSupplier_id}
-                >
-                  {suppliers.map(({supplier_id,supplier_name}, index) =>
-                    {return <option value={supplier_id}>{supplier_name}</option>}
-                  )}           
-                </select>
+                <label htmlFor="supplier_name">Nhà cung cấp hiện tại: {currentProduct.supplier_name}</label>
+                <Field
+                  //disablePortal
+                  component={Autocomplete}
+                  name="supplier_name"
+                  options={suppliers}
+                  getOptionLabel={(option) => option.supplier_name}
+                  //inputValue={currentProduct.supplier_name}
+                  onInputChange={this.onChangeSupplier_name}
+                  sx={{ width: 500 }}
+                  renderInput={(params) => <TextField {...params} placeholder="Vui lòng điền tên nhà cung cấp nếu cần cập nhật!"/>}
+                />          
               </div>
               <div className="form-group">
                 <label htmlFor="amount">Số lượng</label>
@@ -341,18 +337,20 @@ class Product extends Component {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="Category">Loại sản phẩm</label>
-                <select
+                <label htmlFor="Category">Loại sản phẩm (food, drink, ...)</label>
+                <input
+                  type="text"
                   className="form-control"
                   id="category"
                   value={currentProduct.category}
                   onChange={this.onChangeCategory}
                 >
-                  <option value={'food'}>food</option>
-                  <option value={'drink'}>drink</option>
-                  <option value={'cigratte'}>cigratte</option>
-                  <option value={'other'}>other</option>
-                </select>
+                </input>
+                <ErrorMessage
+                  name="category"
+                  component="div"
+                  className="text-danger"
+                />
               </div>
               <div className="form-group">
                 <label>
@@ -378,6 +376,7 @@ class Product extends Component {
                 Hết hàng
               </button>
             )}
+            <text>{" "}</text>
             <button
               type="button"
               className="badge bg-danger mr-2"
@@ -407,7 +406,7 @@ class Product extends Component {
               </div>
             </div>
             </div>
-
+            <text>{" "}</text>
             <button
               type="button"
               className="badge bg-success"
@@ -437,7 +436,7 @@ class Product extends Component {
               </div>
             </div>
             </div>
-
+            <text>{" "}</text>
             <button onClick={() => this.props.navigate(`/products`)} className="badge bg-dark mr-2">
                 Trở lại
             </button>

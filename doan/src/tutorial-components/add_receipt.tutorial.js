@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { useNavigate } from "react-router-dom";
 import UserService from "../services/user.service";
 
-import addManagement from "../image/add_management.png"
+import addReceipt from "../image/add_receipt.png"
 
 const withRouter = WrappedComponent => props => {
     const navigate = useNavigate();
@@ -18,7 +18,7 @@ const withRouter = WrappedComponent => props => {
     );
 };
 
-class AddManagementT extends Component {
+class AddReceiptT extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -42,15 +42,15 @@ class AddManagementT extends Component {
             <div>
             {currentUser ?
             (<div>
-                <h3>Hướng dẫn sử dụng trang 'Thêm nhà đơn hàng mới'</h3>
-                <img src={addManagement} alt="display" width="880" height="500" /><br/>
+                <h3>Hướng dẫn sử dụng trang 'In hóa đơn'</h3>
+                <img src={addReceipt} alt="display" width="880" height="500" /><br/>
                 <button onClick={() => this.props.navigate(`/home`)} className="badge bg-dark mr-2">
                     Trở lại
                 </button>
             </div>) : (<div>notfound...</div>)}
-            </div>
+            </div>           
         )
     }
 }
 
-export default withRouter(AddManagementT)
+export default withRouter(AddReceiptT)

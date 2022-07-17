@@ -27,6 +27,12 @@ class ProductDataService {
   findByCategory(category) {
     return http.get(`/products?category=${category}`);
   }
+  findBySupplier(supplier_id) {
+    return http.get(`/products?supplier_id=${supplier_id}`);
+  }
+  findAllCategories() {
+    return http.get("/products/category");
+  }
   findAllOutStock() {
     return http.get("/products/outstock");
   }

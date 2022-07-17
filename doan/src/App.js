@@ -37,6 +37,11 @@ import AddSupplierT from "./tutorial-components/add-supplier.tutorial"
 import UpdateSupplierT from "./tutorial-components/update-supplier.tutorial"
 import ManagementsListT from "./tutorial-components/management-list.tutorial";
 import AddManagementT from "./tutorial-components/add-management.tutorial"
+import AddReceiptT from "./tutorial-components/add_receipt.tutorial"
+import ReceiptT from "./tutorial-components/receipt.tutorial"
+
+import AddReceipt from "./receipt-components/add-receipt.component"
+import Receipt from "./receipt-components/receipt.component"
 
 import EventBus from "./common/EventBus";
 import AuthVerify from "./common/auth-verify";
@@ -54,7 +59,7 @@ class App extends Component {
       showModeratorBoard: false,
       showAdminBoard: false,
       currentUser: undefined,
-      height: '180vh'
+      height: '110vh'
     };
 
     //this.appMenuRef = React.createRef();
@@ -100,8 +105,8 @@ class App extends Component {
                     backgroundPosition: 'center',
                     backgroundSize: 'cover',
                     backgroundRepeat: 'no-repeat',
-                    width: '100vw',
-                    height: this.state.height}
+                    width: '99vw',
+                    height: this.state.height,}
                   }>
         <nav className="navbar navbar-expand navbar-dark bg-dark">
           {currentUser
@@ -133,13 +138,13 @@ class App extends Component {
             {currentUser && (
             <React.Fragment>
               <li className="nav-item ">
-                <Link to={"/products"} className="nav-link">
-                  Products
+                <Link to={"/suppliers"} className="nav-link">
+                  Suppliers
                 </Link>
               </li>
               <li className="nav-item ">
-                <Link to={"/suppliers"} className="nav-link">
-                  Suppliers
+                <Link to={"/products"} className="nav-link">
+                  Products
                 </Link>
               </li>
               <li className="nav-item ">
@@ -195,8 +200,11 @@ class App extends Component {
             {/*Management*/}
             <Route exact path="/managements" element={<ManagementsList/>} />
             <Route exact path="/addManagement" element={<AddManagement/>} />
+            {/*Receipt*/}
+            <Route exact path="/addReceipt" element={<AddReceipt/>} />
+            <Route exact path="/Receipt" element={<Receipt/>} />
             {/*Login*/}
-            <Route exact path="/"  element={<Home/>} />
+            <Route exact path="/"  element={<HomeUnlogin/>} />
             <Route exact path="/home"  element={<Home/>} />
             <Route exact path="/homeUnlogin"  element={<HomeUnlogin/>} />
             <Route exact path="/login"  element={<Login/>} />
@@ -216,11 +224,11 @@ class App extends Component {
             <Route exact path="/updateSupplierT" element={<UpdateSupplierT/>} />
             <Route exact path="/managementsT" element={<ManagementsListT/>} />
             <Route exact path="/addManagementT" element={<AddManagementT/>} />
+            <Route exact path="/ReceiptT" element={<ReceiptT/>} />
+            <Route exact path="/addReceiptT" element={<AddReceiptT/>} />
           </Routes>
         </div>
-        <footer>
-          <p>by PQHB</p>
-        </footer>
+        <footer>By PQHB</footer>
         <AuthVerify logOut={this.logOut}/>
       </div >
     );

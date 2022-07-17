@@ -4,7 +4,7 @@ import Input from "react-validation/build/input";
 import CheckButton from "react-validation/build/button";
 import { isEmail } from "validator";
 import { useNavigate } from "react-router-dom";
-
+import UserService from "../services/user.service";
 import AuthService from "../services/auth.service";
 
 const withRouter = WrappedComponent => props => {
@@ -74,9 +74,21 @@ class Register extends Component {
       email: "",
       password: "",
       successful: false,
-      message: ""
+      message: "",
+      admin: false,
     };
   }
+
+  componentDidMount(){
+    UserService.getAdminBoard().then(
+      response => {
+        this.setState({
+          admin: true,
+        });
+      },
+      error => {}
+    );
+}
 
   onChangeUsername(e) {
     this.setState({
@@ -136,14 +148,12 @@ class Register extends Component {
   }
 
   render() {
+    const {admin} =this.state;
     return (
-      <div className="col-md-12">
+      <div>
+      {admin ?
+      (<div className="col-md-12">
         <div className="card card-container">
-          <img
-            src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
-            alt="profile-img"
-            className="profile-img-card"
-          />
 
           <Form
             onSubmit={this.handleRegister}
@@ -189,8 +199,10 @@ class Register extends Component {
                   />
                 </div>
 
-                <div className="form-group" >
+                <div className="form-group text-center" >
+                  <div><label></label></div>
                   <button className="btn btn-primary btn-block">Thêm</button>
+                  <text>{" "}</text>
                   <button onClick={() => this.props.navigate(`/admin`)} className="btn btn-danger">
                     Trở lại
                   </button>
@@ -220,6 +232,7 @@ class Register extends Component {
             />
           </Form>
         </div>
+      </div>) : (<div>notfound...</div>)}
       </div>
     );
   }

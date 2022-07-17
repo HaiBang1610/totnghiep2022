@@ -1,20 +1,26 @@
 import React, { Component } from "react";
 import ManagementDataService from "../services/management.service"
+import ProductDataService from "../services/product.service";
 import { Link} from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
+import { Tooltip } from "react-bootstrap";
 import moment from "moment-timezone";
 import DateTimePicker from 'react-datetime-picker'
+import Scrollbars from "react-custom-scrollbars-2";
 
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 export default class ManagementsList extends Component {
     constructor(props) {
       super(props);
       this.onChangeSearchName = this.onChangeSearchName.bind(this);
+      this.onChangeSearchCategory = this.onChangeSearchCategory.bind(this);
       this.retrieveManagements = this.retrieveManagements.bind(this);
+      this.retrieveCategories = this.retrieveCategories.bind(this);
       this.refreshList = this.refreshList.bind(this);
       this.setActiveManagement = this.setActiveManagement.bind(this);
       this.searchName = this.searchName.bind(this);
+      this.searchCategory = this.searchCategory.bind(this);
       this.onChangeDate=this.onChangeDate.bind(this);
       this.searchDate = this.searchDate.bind(this);
       this.searchMonth = this.searchMonth.bind(this);
@@ -23,17 +29,20 @@ export default class ManagementsList extends Component {
       this.getPriceMonth = this.getPriceMonth.bind(this);
       this.getPriceYear = this.getPriceYear.bind(this);
       this.state = {
-        management: [],
+        managements: [],
         currentManagement: null,
         currentIndex: -1,
         searchName: "",
+        searchCategory: "",
         date:"",
         price:"",
         currentUser: false,
+        categories1: [],
       };
     }
     componentDidMount() {
       this.retrieveManagements();
+      this.retrieveCategories();
       UserService.getUserBoard().then(
         response => {
           this.setState({
@@ -41,26 +50,19 @@ export default class ManagementsList extends Component {
           });
           console.log(response.data)
         },
-        error => {
-          this.setState({
-            content:
-              (error.response &&
-                error.response.data &&
-                error.response.data.message) ||
-              error.message ||
-              error.toString()
-          });
-  
-          if (error.response && error.response.status === 401) {
-            EventBus.dispatch("logout");
-          }
-        }
+        error => {}
       );
     }
     onChangeSearchName(e) {
       const searchName = e.target.value;
       this.setState({
         searchName: searchName
+      });
+    }
+    onChangeSearchCategory(e) {
+      const searchCategory = e.target.value;
+      this.setState({
+        searchCategory: searchCategory
       });
     }
     onChangeDate(e) {
@@ -75,6 +77,18 @@ export default class ManagementsList extends Component {
         .then(response => {
           this.setState({
             managements: response.data
+          });
+          console.log(response.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    }
+    retrieveCategories() {
+      ProductDataService.findAllCategories()
+        .then(response => {
+          this.setState({
+            categories1: response.data
           });
           console.log(response.data);
         })
@@ -97,6 +111,18 @@ export default class ManagementsList extends Component {
     }
     searchName() {
         ManagementDataService.findByName(this.state.searchName)
+        .then(response => {
+          this.setState({
+            managements: response.data
+          });
+          console.log(response.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    }
+    searchCategory() {
+      ManagementDataService.findByCate(this.state.searchCategory)
         .then(response => {
           this.setState({
             managements: response.data
@@ -186,7 +212,7 @@ export default class ManagementsList extends Component {
       });
     }
     render() {
-      const { searchName, managements, currentManagement, currentIndex, currentUser } = this.state;
+      const { categories1, searchName, managements, currentManagement, currentIndex, currentUser, searchCategory } = this.state;
       return (
         <div>
         {currentUser ?
@@ -213,6 +239,26 @@ export default class ManagementsList extends Component {
               </div>
             </div>
           </div>
+          <div className="col-md-8">
+          <h6>Loại sản phẩm{" "}
+          <select
+            value= {searchCategory}
+            onChange ={this.onChangeSearchCategory}
+          >
+            {categories1.map((category, index) => {return<><option value={category.category}>{category.category}</option></>})}
+            <option value="" disabled="true" hidden="true">Chọn</option>
+          </select>
+          <text>{" "}</text>
+              <button
+                className="btn btn-secondary btn-sm"
+                type="button"
+                onClick={this.searchCategory}
+              >
+                <i class="bi bi-filter"></i>
+                Lọc
+              </button>
+          </h6>
+        </div>
           {/*Management List-----------------------------------------------------------------------*/}
           <div className="col-md-6">
             <h4>Danh sách đơn hàng {""}
@@ -303,13 +349,23 @@ export default class ManagementsList extends Component {
                   </div>
                 </div>
               </div>
+              <div>
               <Link to="/addManagement">
                 <button className="btn btn-sm btn-primary">
                   <i class="bi bi-plus-circle text-light"></i>
                   {" "}Thêm đơn hàng
                 </button>
             </Link>
+            <text>{" "}</text>
+            <Link to="/addReceipt">
+                <button className="btn btn-sm btn-primary">
+                <i class="bi bi-printer"></i>
+                  {" "}In hóa đơn
+                </button>
+            </Link>
+            </div>
             </h4>
+            <Scrollbars autoHeightMax={450} autoHeight>
             <ul className="list-group">
               {managements &&
                 managements.map((management, index) => (
@@ -321,15 +377,16 @@ export default class ManagementsList extends Component {
                     onClick={() => this.setActiveManagement(management, index)}
                     key={index}
                   >
-                    {management.product_name} - {moment(management.datetime).format("YYYY-MM-DD")}
+                    <div className="d-flex justify-content-between">{management.product_name} <span className="badge bg-primary rounded-pill" data-bs-toggle="tooltip" data-bs-placement="right" title={moment(management.datetime).format("YYYY-MM-DD HH:mm:ss")}>{moment(management.datetime).format("YYYY-MM-DD")}</span></div>
                   </li>
                 ))}
             </ul>
+            </Scrollbars>
           </div>
           {/*Management Detail--------------------------------------------------------------------*/}
           <div className="col-md-6">
             {currentManagement ? (
-              <div>
+              <div class="card">
                 <h4>Đơn hàng</h4>
                 <div>
                   <label>
@@ -359,7 +416,7 @@ export default class ManagementsList extends Component {
             ) : (
               <div>
                 <br />
-                <p>Vui lòng chọn một đơn hàng trong danh sách...</p>
+                <p style={{fontWeight: 'bold'}}>Vui lòng chọn một đơn hàng trong danh sách...</p>
               </div>
             )}
           </div>

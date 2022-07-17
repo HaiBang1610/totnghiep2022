@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import SupplierDataService from "../services/supplier.service";
 import { Link} from "react-router-dom";
+import Scrollbars from "react-custom-scrollbars-2";
 
 import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
 
 
 export default class SuppliersList extends Component {
@@ -32,20 +32,7 @@ export default class SuppliersList extends Component {
         });
         console.log(response.data)
       },
-      error => {
-        this.setState({
-          content:
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString()
-        });
-
-        if (error.response && error.response.status === 401) {
-          EventBus.dispatch("logout");
-        }
-      }
+      error => {}
     );
   }
   onChangeSearchName(e) {
@@ -135,13 +122,16 @@ export default class SuppliersList extends Component {
           <button className="btn btn-secondary btn-sm" onClick={this.refreshList}>
             <i class="bi bi-arrow-clockwise"></i>
           </button>
+          <div>
           <Link to="/addSupplier">
             <button className="btn btn-sm btn-primary">
               <i class="bi bi-plus-circle text-light"></i>
               {" "}Thêm nhà cung cấp
             </button>
           </Link>
+          </div>
           </h4>
+          <Scrollbars autoHeightMax={450} autoHeight>
           <ul className="list-group">
             {suppliers &&
               suppliers.map((supplier, index) => (
@@ -157,6 +147,7 @@ export default class SuppliersList extends Component {
                 </li>
               ))}
           </ul>
+          </Scrollbars>
           {/*<button
             className="m-3 btn btn-sm btn-danger"
             onClick={this.removeAllSuppliers}
@@ -168,7 +159,7 @@ export default class SuppliersList extends Component {
         {/*Supplier Detail--------------------------------------------------------------------*/}
         <div className="col-md-6">
           {currentSupplier ? (
-            <div>
+            <div class="card">
               <h4>Nhà cung cấp</h4>
               <Link
                 to={`/suppliers/${currentSupplier.supplier_id}`}                
@@ -203,7 +194,7 @@ export default class SuppliersList extends Component {
           ) : (
             <div>
               <br />
-              <p>Vui lòng chọn một nhà cung cấp trong danh sách...</p>
+              <p style={{fontWeight: 'bold'}}>Vui lòng chọn một nhà cung cấp trong danh sách...</p>
             </div>
           )}
         </div>
